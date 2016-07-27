@@ -7,7 +7,7 @@ output:
 
 
 ## Loading and preprocessing the data
-```{r echo=TRUE}
+```{r loading, echo=TRUE}
 
     # Unzip and load the data
     unzip("activity.zip")
@@ -20,7 +20,7 @@ output:
 ```
 
 ## What is mean total number of steps taken per day?
-```{r echo=TRUE}
+```{r mean_total, echo=TRUE}
     
     # Total steps by day
     total.steps.by.day <- tapply(activity$steps, activity$date, FUN=sum, na.rm=TRUE)
@@ -40,7 +40,7 @@ output:
 ```
 
 ## What is the average daily activity pattern?
-```{r echo=TRUE}
+```{r daily_activity, echo=TRUE}
     # Average daily activity pattern
     avg.steps.by.interval <- tapply(activity$steps, activity$interval, FUN=mean,
                                     na.rm=TRUE)
@@ -54,7 +54,7 @@ output:
 
 
 ## Imputing missing values
-```{r echo=TRUE}
+```{r imputing, echo=TRUE}
     
     # How many NAs?
     num.na.rows = length(activity$steps[is.na(activity$steps)])
@@ -85,7 +85,7 @@ output:
 ```
 
 ## Are there differences in activity patterns between weekdays and weekends?
-```{r echo=TRUE}
+```{r weekday_vs_weekend, echo=TRUE}
     
     # Create and populate day.type column
     activity.imputed$dow <- weekdays(activity.imputed$date)
