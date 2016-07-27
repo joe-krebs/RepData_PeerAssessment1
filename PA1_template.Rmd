@@ -7,19 +7,100 @@ output:
 
 
 ## Loading and preprocessing the data
+```{r echo=TRUE}
 
-
+    # Unzip and load the data
+    unzip("activity.zip")
+    activity <- read.csv("activity.csv")
+    activity$date <- as.Date(activity$date)
+    
+    # Take a peek
+    str(activity)
+    summary(activity)
+```
 
 ## What is mean total number of steps taken per day?
-
-
+```{r echo=TRUE}
+    
+    # Total steps by day
+    total.steps.by.day <- tapply(activity$steps, activity$date, FUN=sum, na.rm=TRUE)
+    barplot(total.steps.by.day, main="Total Steps Taken by Day", xlab="Date",
+            ylab="Total Steps")
+    
+    # Histogram of total steps taken per day
+    hist(total.steps.by.day, breaks=10, main="Histogram of Total Steps Taken per Day",
+         xlab="Total Steps Taken per Day", ylab="Occurrences")
+    
+    # Mean and median of total steps taken per day
+    mean.steps <- mean(total.steps.by.day)
+    median.steps <- median(total.steps.by.day)
+    out.txt <- paste0("Mean Total Steps Taken per Day:    ", mean.steps,
+                      "\nMedian Total Steps Taken per Day:  ", median.steps)
+    cat(out.txt)
+```
 
 ## What is the average daily activity pattern?
-
+```{r echo=TRUE}
+    # Average daily activity pattern
+    avg.steps.by.interval <- tapply(activity$steps, activity$interval, FUN=mean,
+                                    na.rm=TRUE)
+    plot(x=names(avg.steps.by.interval), y=avg.steps.by.interval, type="l",
+         main="Avg Daily Activity by Interval",
+         xlab="Interval", ylab="Average Number of Steps")
+    
+    max.interval <- names(which(avg.steps.by.interval==max(avg.steps.by.interval)))
+    paste0("Interval containing maximum steps:  ", max.interval)
+```
 
 
 ## Imputing missing values
+```{r echo=TRUE}
+    
+    # How many NAs?
+    num.na.rows = length(activity$steps[is.na(activity$steps)])
+    paste0("Number of NA rows:  ", num.na.rows)
 
-
+    # Create a new dataset and fill with imputed values of interval averages as necessary
+    activity.imputed <- merge(x=activity, y=avg.steps.by.interval,
+                                   by.x="interval", by.y=0)
+    activity.imputed$steps[is.na(activity.imputed$steps)] <-
+        activity.imputed$y[is.na(activity.imputed$steps)]
+    
+    # Total steps by day (imputed)
+    total.steps.by.day <- tapply(activity.imputed$steps, activity.imputed$date, FUN=sum,
+                                 na.rm=TRUE)
+    # Histogram of total steps taken per day (imputed)
+    hist(total.steps.by.day, breaks=10, main="Histogram of Total Steps Taken per Day (Imputed)",
+         xlab="Total Steps Taken per Day", ylab="Occurrences")
+    
+    # Mean and median of total steps taken per day
+    mean.steps <- mean(total.steps.by.day)
+    median.steps <- median(total.steps.by.day)
+    out.txt <- paste0("Mean Total Steps Taken per Day:    ", mean.steps,
+                      "\nMedian Total Steps Taken per Day:  ", median.steps,
+                      "\nImputation causes distribution of step totals to be more centered",
+                      "\nand raises both the mean and median step totals")
+    cat(out.txt)
+    
+```
 
 ## Are there differences in activity patterns between weekdays and weekends?
+```{r echo=TRUE}
+    
+    # Create and populate day.type column
+    activity.imputed$dow <- weekdays(activity.imputed$date)
+    activity.imputed$day.type <- "weekday"
+    activity.imputed$day.type[activity.imputed$dow %in% c("Saturday", "Sunday")] <- "weekend"
+    activity.imputed$day.type <- as.factor(activity.imputed$day.type)
+
+    # Average daily activity pattern (using imputed data)
+    avg.steps.by.interval.day.type <- aggregate(steps ~ interval + day.type, 
+                                                data=activity.imputed, FUN="mean")
+
+    # Create panel plot comparing weekday and weekend average daily steps
+    library(lattice)
+    xyplot(steps ~ interval | day.type, data=avg.steps.by.interval.day.type, 
+           type="l", main="Avg Daily Activity by Interval (Imputed)", 
+           xlab="Interval", ylab="Avg Number of Steps")
+    
+```
